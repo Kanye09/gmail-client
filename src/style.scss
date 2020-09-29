@@ -175,7 +175,7 @@ body {
             }
             .searched-message{
               // display: flex;
-              .searched-top{}
+              
               .searched-bottom{
                 color: #777;
                 font-size: 12px;
@@ -644,6 +644,41 @@ body {
             }
           }
         }
+      
+      .email-star {
+        background-image: url('https://www.gstatic.com/images/icons/material/system/2x/star_border_black_20dp.png');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 20px;
+        padding: 0 10px 0 0;
+        width: 20px;
+        height: 20px;
+        opacity: 0.16;
+        margin-right: 20px;
+        position: absolute;
+        left: 50px;
+        top: 10px;
+        
+      }
+
+      .sender-name {
+        padding-left: 0;
+        text-align: start;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        position: relative;
+        margin-left: 100px;
+      }
+
+      .sender-email {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 200px;
+        margin-right: 20px;
+        
+      }
 
         .email-star {
           background-image: url('https://www.gstatic.com/images/icons/material/system/2x/star_border_black_20dp.png');
@@ -743,24 +778,9 @@ body {
         }
       }
 
-      // Unread message style
-
-      .unread {
-        .email-list {
-          background-color: white;
-          .sender-name,
-          .sender-email,
-          .message-title,
-          .email-time {
-            font-weight: 900;
-            color: $secondary-color;
-          }
-          .message {
-            color: #5f6368;
-            font-weight: 200;
-          }
-        }
-      }
+                      //  email list end!
+                      
+                      
 
       .opened-email {
         position: absolute;
