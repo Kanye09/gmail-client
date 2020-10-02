@@ -107,34 +107,43 @@ function listAllEmails(data) {
   removeAllFromDom();
 
   let list = document.querySelector('[status="template"]');
-
-  let uppLimit = data.items.length > 20 ? 20 : data.items.length;
-
-  for (let i = 0; i < uppLimit; i++) {
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  for (let i = 0; i < data.items.length; i++) {
+  
     let anEmail = list.cloneNode(true);
-    anEmail.style.display = 'block';
-    anEmail.removeAttribute('status');
-    if (!data.items[i].isRead) {
-      anEmail.classList.add('unread');
-    } else if (data.items[i].isRead) {
-      anEmail.classList.remove('unread');
-    }
 
-    let senderName = anEmail.querySelector('.sender-name');
-    let senderEmail = anEmail.querySelector('.sender-email');
-    let messageTitle = anEmail.querySelector('.message-title');
-    let message = anEmail.querySelector('.message');
-    let emailTime = anEmail.querySelector('.email-time');
-    let emailDate = new Date(data.items[i].date);
-    let stringDate = formatDate(emailDate, 'forEmailList');
-    senderName.innerHTML = data.items[i].senderName;
-    senderEmail.innerHTML = data.items[i].senderEmail;
-    messageTitle.innerHTML = data.items[i].messageTitle;
-    message.innerHTML = data.items[i].messages[0].message;
-    emailTime.innerHTML = stringDate;
-    anEmail.setAttribute('data-id', data.items[i].id);
-    anEmail.addEventListener('click', openEmail);
-    main.appendChild(anEmail);
+    if (myData.items[i].tags.isTrash !== true) {
+      main.appendChild(anEmail);
+      anEmail.style.display = 'block';
+      anEmail.removeAttribute('status');
+      let senderName = document.querySelectorAll('.sender-name')[i + 1];
+      let senderEmail = document.querySelectorAll('.sender-email')[i + 1];
+      let messageTitle = document.querySelectorAll('.message-title')[i + 1];
+      let message = document.querySelectorAll('.message')[i + 1];
+      let emailTime = document.querySelectorAll('.email-time')[i + 1];
+      let emailDate = new Date(data.items[i].date);
+      let stringDate = `${emailDate.getDate()} ${monthNames[emailDate.getMonth()].substr(0, 3)}`;
+      senderName.innerHTML = data.items[i].senderName;
+      senderEmail.innerHTML = data.items[i].senderEmail;
+      messageTitle.innerHTML = data.items[i].messageTitle;
+      message.innerHTML = data.items[i].messages[0].message;
+      emailTime.innerHTML = stringDate;
+      anEmail.setAttribute('data-id', data.items[i].id);
+      anEmail.addEventListener('click', openEmail);
+    }   
   }
 }
 
@@ -225,11 +234,15 @@ function toUpdates(data) {
 function openEmail(event) {
   let curID;
   let currElement = event.target;
-  if (currElement.classList.contains('email-delete')) {
-    curID = getIdOfEmailClicked(currElement);
-    myData.items[curID].tags.isTrash = true;
-    let data = getUndeletedEmails();
-    listAllEmails(data);
+  let curID = getIdOfEmailClicked(currElement);
+  let openWindowEmail = document.querySelector('.opened-email');
+  let email;
+  event.stopPropagation()
+  event.preventDefault()
+  event.stopImmediatePropagation()
+  if (event.target.classList.contains('fa-trash')) {
+    deleteEmail(event.target.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('data-id'));
+    console.log(event.target.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute('data-id'));
     return;
   }
   if (myData) {
@@ -285,191 +298,12 @@ function getIdOfEmailClicked(element) {
   return checkedElement.getAttribute('data-id');
 }
 
-// Tool
-document.getElementById('selectAll').addEventListener(
-  'click',
-  function (ev) {
-    ev.target.parentNode.parentNode.classList[ev.target.checked ? 'add' : 'remove']('selected');
-  },
-  false
-);
 
-//EVENT LISTENER FOR SEARCH BAR -- OUR LOCAL SEARCH ENGINE
-let drop = document.querySelector('.middle div');
-let searchMiddle = document.querySelector('.middle');
+// DELETING EMAIL
 
-searchBar.addEventListener('input', getSearchCriteria);
-
-function getSearchCriteria(e) {
-  if (e.target.value == '') {
-    dropdownForSearch.innerHTML = '';
-  }
-  drop.style.display = 'block';
-  searchedResult.items = [];
-  for (let i = 0; i < myData.items.length; i++) {
-    for (let k in myData.items[i]) {
-      if (typeof myData.items[i][k] == 'string' && k !== 'date') {
-        if (e.target.value === '') {
-          searchedResult.items.length = 0;
-          searchedResult.total = searchedResult.items.length;
-          return;
-        }
-        if (myData.items[i][k].toLowerCase().includes(e.target.value.trim().toLowerCase())) {
-          searchedResult.items.push(myData.items[i]);
-        }
-      } else {
-        if (Array.isArray(myData.items[i][k])) {
-          for (let j = 0; j < myData.items[i][k].length; j++) {
-            console.log('this', myData.items[i][k]);
-            //       console.log('this',myData.items[i][k])
-            if (myData.items[i][k][0].message.toLowerCase().includes(e.target.value.trim().toLowerCase())) {
-              searchedResult.items.push(myData.items[i]);
-            }
-          }
-        }
-      }
-    }
-  }
-  searchedResult.next = searchedResult.next;
-  searchedResult.total = searchedResult.items.length;
-  console.log(e.target.value, searchedResult);
-  if (!drop.classList.contains('search-drop-result')) {
-    drop.classList.toggle('search-drop-result');
-  }
-
-  renderToDropMenu();
-}
-
-function renderToDropMenu() {
-  dropdownForSearch.innerHTML = '';
-
-  for (let i = 0; i < searchedResult.total; i++) {
-    let date = new Date(searchedResult.items[i].date);
-    let div = document.createElement('div');
-    div.className = 'searched-email';
-    div.innerHTML = `
-      <div class="left-side">
-        <i class="fas fa-envelope"></i>
-        <div class="searched-message">
-          <div class="searched-top">
-            ${searchedResult.items[i].messageTitle}
-          </div>
-          <div class="searched-bottom">
-            ${searchedResult.items[i].senderName}
-          </div>
-        </div>
-      </div>
-      <div class="right-side">
-        ${date.getMonth()}/${date.getDate()}/${date.getFullYear() % 100}
-      </div>
-    `;
-    div.setAttribute('data-id', searchedResult.items[i].id);
-    console.log(div.getAttribute('data-id'), 'id-match', searchedResult.items[i].id);
-    div.addEventListener('click', openEmail);
-    dropdownForSearch.appendChild(div);
-  }
-}
-
-//SIDEBAR SWITCHING
-let btnSwitch = document.querySelectorAll('.left-tag');
-for (let i = 0; i < btnSwitch.length; i++) {
-  btnSwitch[i].addEventListener('click', changeToAnother);
-}
-function changeToAnother(e) {
-  if (e.currentTarget.classList.contains('trash')) {
-    tabs.style.display = 'none';
-    let deletedData = getDeletedEmails();
-    listAllEmails(deletedData);
-  } else if (e.currentTarget.classList.contains('inbox')) {
-    tabs.style.display = 'flex';
-    let undeletedData = getUndeletedEmails();
-    listAllEmails(undeletedData);
-  }
-
-  for (let i = 0; i < btnSwitch.length; i++) {
-    btnSwitch[i].classList.remove('switch');
-  }
-  let el = e.currentTarget;
-  el.classList.add('switch');
-  console.log(e.currentTarget);
-}
-
-//SIDEBAR CATEGORIES DROPDOWN
-let categoriesButton = document.querySelector('.dropbtn');
-categoriesButton.addEventListener('click', myFunction);
-
-function myFunction() {
-  document.getElementById('myDropdown').classList.toggle('show');
-  console.log('hello');
-}
-
-// // Close the dropdown if the user clicks outside of it
-// window.onclick = function(event) {
-//   if (!event.target.matches('.dropbtn')) {
-//     var dropdowns = document.getElementsByClassName("dropdown-content");
-//     var i;
-//     for (i = 0; i < dropdowns.length; i++) {
-//       var openDropdown = dropdowns[i];
-//       if (openDropdown.classList.contains('show')) {
-//         openDropdown.classList.remove('show');
-//       }
-//     }
-//   }
-// }
-
-searchBar.addEventListener('change', closeSearchMenu);
-
-function closeSearchMenu() {
-  console.log('check check check');
-  setTimeout(() => {
-    drop.style.display = 'none';
-  }, 140);
-}
-
-function getDeletedEmails() {
-  currDisplayedData = detectWhichTab();
-  let deletedEmailsArray = [];
-  currDisplayedData.items.forEach((value) => {
-    if (value.tags.isTrash) {
-      deletedEmailsArray.push(value);
-    }
-  });
-  let deletedEmailData = {
-    items: deletedEmailsArray,
-    next: {
-      page: social.items.length < 50 ? 1 : 2,
-      limit: 50,
-    },
-    total: deletedEmailsArray.length,
-  };
-  return deletedEmailData;
-}
-
-function getUndeletedEmails() {
-  currDisplayedData = detectWhichTab();
-  let undeletedEmailsArray = [];
-  currDisplayedData.items.forEach((value) => {
-    if (!value.tags.isTrash) {
-      undeletedEmailsArray.push(value);
-    }
-  });
-  let undeletedEmailData = {
-    items: undeletedEmailsArray,
-    next: {
-      page: social.items.length < 50 ? 1 : 2,
-      limit: 50,
-    },
-    total: undeletedEmailsArray.length,
-  };
-  return undeletedEmailData;
-}
-
-function updateCurrDisplayedData() {
-  currDisplayedData.items.forEach((value, ind) => {
-    let indOfMyData = currDisplayedData.items[ind].id;
-    currDisplayedData.items[ind].isRead = myData.items[indOfMyData].isRead;
-    currDisplayedData.items[ind].tags.isTrash = myData.items[indOfMyData].tags.isTrash;
-    currDisplayedData.items[ind].tags.isStar = myData.items[indOfMyData].tags.isStar;
-    currDisplayedData.items[ind].tags.isSpam = myData.items[indOfMyData].tags.isStar;
-  });
+function deleteEmail(id) {
+  myData.items[id].tags.isTrash = true;
+  listAllEmails(myData);
+  console.log(id)
+  // console.log(myData.items[id].isTrash);
 }
